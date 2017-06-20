@@ -25,17 +25,12 @@ bool Stock::sell(int shares_)
 
 float Stock::pricecheck(int price_)
 {
-	return ((float)price_ - price) / price;
+	return (((float)price_ - price) * 100) / price;
 }
 
 std::string Stock::get_ticker()
 {
 	return ticker;
-}
-
-std::time_t Stock::get_time()
-{
-	return time;
 }
 
 int Stock::get_shares()

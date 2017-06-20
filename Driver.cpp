@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <list>
+#include <vector>
+#include <algorithm>
 
 #include "Stock.h"
 
@@ -10,11 +12,12 @@ int main(int argc, char **argv)
 {
 	string ticker, line;
 	int shares, price, num_stocks, i;
+	double price_f;
 	list<Stock*>::iterator it;
 	
 	list<Stock*> *stocks = new list<Stock*>();
 	
-	fstream log("stocks.log");
+	ifstream log("stocks.log");
 	if (log.is_open())
 	{	
 		for (num_stocks = 0; log >> ticker; num_stocks++)
@@ -22,6 +25,7 @@ int main(int argc, char **argv)
 			log >> shares >> price;
 			stocks->push_back(new Stock(ticker, shares, price));
 		}
+		log.close();
 	}
 	else
 	{
@@ -38,51 +42,62 @@ int main(int argc, char **argv)
 				<< (*it)->get_shares() << '\t'
 				<< (((float)(*it)->get_price()) / 100) << endl;
 		}
+		
 		cin >> line;
-		if ((line == "buy") || (line == "BUY"))
+		transform(line.begin(), line.end(), line.begin(), ::tolower);
+		if ((line == "buy") || (line == "b"))
 		{
-			cin >> ticker;
+			cin >> ticker >> shares >> price_f;
+			transform(ticker.begin(), ticker.end(), ticker.begin(), ::toupper);
 			for (it = stocks->begin(); it != stocks->end(); it++)
 			{
 				if ((*it)->get_ticker() == ticker)
 				{
-					cin >> shares >> price;
-					(*it)->buy(shares, price);
+					(*it)->buy(shares, (int)(price_f * 100));
 					break;
 				}
 			}
 			if (it == stocks->end())
 			{
-				stocks->push_back(new Stock(ticker, shares, price));
+				stocks->push_back(new Stock(ticker, shares, (int)(price_f * 100)));
 			}
 		}
-		else if ((line == "sell") || (line == "SELL"))
+		else if ((line == "sell") || (line == "s"))
 		{
-			cin >> ticker;
+			cin >> ticker >> shares;
+			transform(ticker.begin(), ticker.end(), ticker.begin(), ::toupper);
 			for (it = stocks->begin(); it != stocks->end(); it++)
 			{
 				if ((*it)->get_ticker() == ticker)
 				{
-					cin >> shares;
-					if (!((*it)->sell(shares))) cout << "Sell unsuccessful" << endl;
+					if (!((*it)->sell(shares)))
+					{
+						cout << "Sell unsuccessful" << endl;
+						break;
+					}
+					if ((*it)->get_shares() == 0) stocks->remove(*it);
 					break;
 				}
 			}
 		}
-		else if ((line == "pricecheck") || (line == "PRICECHECK"))
+		else if ((line == "pricecheck") || (line == "pc"))
 		{
-			cin >> ticker;
+			cin >> ticker >> price_f;
+			transform(ticker.begin(), ticker.end(), ticker.begin(), ::toupper);
 			for (it = stocks->begin(); it != stocks->end(); it++)
 			{
 				if ((*it)->get_ticker() == ticker)
 				{
-					cin >> price;
-					cout << (*it)->pricecheck(price) << endl;
+					cout << (*it)->pricecheck((int)(price_f * 100)) << '%' << endl;
 					break;
 				}
 			}
+			if (it == stocks->end())
+			{
+				cout << "Invalid ticker" << endl;
+			}
 		}
-		else if ((line == "exit") || (line == "EXIT"))
+		else if ((line == "exit") || (line == "e") || (line == "x"))
 		{
 			break;
 		}
@@ -91,6 +106,13 @@ int main(int argc, char **argv)
 			cout << "Invalid syntax" << endl;
 		}
 	}
+	
+	ofstream writeback("stocks.log");
+	for (it = stocks->begin(); it != stocks->end(); it++)
+	{
+		writeback << (*it)->get_ticker() << ' ' << (*it)->get_shares() << ' ' << (*it)->get_price() << endl;
+	}
+	writeback.close();
 	
 	for (it = stocks->begin(); it != stocks->end(); delete *it, it++);
 	delete stocks;
