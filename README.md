@@ -1,12 +1,12 @@
 # Price-Log
 
-Buy: (buy or b)
-
-buy <ticker> <shares> <price per share>
+Buy\> buy or b
+buy \<ticker\> \<shares\> \<price per share\>
 
   Adds to the stock log
   
     If stock already exists, updates and averages price
+
 
 Sell: (sell or s)
 
